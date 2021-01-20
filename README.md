@@ -4,7 +4,7 @@ Free-flyer adaptive control for 6 DOF manipulation of unknown grappled objects. 
 
 Accompanying [SciTech 2021 paper](https://arc.aiaa.org/doi/abs/10.2514/6.2021-2018) on this case study.
 
-![alt text](./img/adaptive.gif)
+![alt text](./img/adaptive2.gif)
 
 ## Usage
 
@@ -19,6 +19,9 @@ The [SPART MATLAB library](https://spart.readthedocs.io/en/latest/) is required 
 ## Function Reference
 
 `create_ref_traj`: generates reference trajectory to follow.
+
 `analytical_dynamics`: computes the approximate Y vector used in adaptive control using MATLAB's symbolic toolbox.
+
 `freeflyer_dyn_adapt`: dynamics propogation function.
+
 `freeflyer_*_control`: control callback used during dynamics propagation. The controllers are defined here!
