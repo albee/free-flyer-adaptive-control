@@ -4,6 +4,7 @@ Free-flyer adaptive control for 6 DOF manipulation of unknown grappled objects. 
 
 Accompanying [SciTech 2021 paper](https://arc.aiaa.org/doi/abs/10.2514/6.2021-2018) on this case study.
 
+<center>
 <p align="center">
 <img align="center" src="./img/adaptive2.gif">
   
@@ -13,6 +14,7 @@ Accompanying [SciTech 2021 paper](https://arc.aiaa.org/doi/abs/10.2514/6.2021-20
 
   A sample of end effector mass adaptation of the adaptive controller.
 </p>
+</center>
 
 ## Usage
 
