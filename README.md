@@ -4,6 +4,8 @@ Free-flyer adaptive control for 6 DOF manipulation of unknown grappled objects. 
 
 *Updates in progress through Jan-21!*
 
+![alt text](./img/adaptive.gif)
+
 ## Usage
 
 `freeflyer_sim_main.m` is the entrypoint script for running a simulation and plotting.
