@@ -1,4 +1,5 @@
 % Compute adaptive control for the robot
+% Configured for 3D!
 function u = freeflyer_adaptive_control(x_des, x, xdd_des, ff, ff_model, Y_lin, Y_aff)
     x = x(1:16);  % shave off parameter
     x_err = x - x_des;

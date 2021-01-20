@@ -1,4 +1,4 @@
-% Compute adaptive control for the robot
+% Compute feedback linearization control for the robot
 % Configured for 3D!
 function u = freeflyer_feedback_lin_control(x_des, x, xdd_des, ff, ff_model)
     x = x(1:16);  % shave off parameter
