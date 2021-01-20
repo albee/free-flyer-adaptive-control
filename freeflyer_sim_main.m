@@ -5,6 +5,7 @@
 %}
 
 addpath('./SPART');
+addpath('./linearizedFunctions/');
 addpath('./plot');
 addpath(genpath('./codegen'));
 clc; close all; clearvars;
@@ -16,7 +17,7 @@ fontsize = 25;
 COMPUTE_ANALYTICAL = false;  % loads analytical adaptive control instead of computing it
 tf = 20.0; % specified in create_ref_traj()
 CONTROLLER = 'adaptive'; %  ['adaptive', 'feedback_lin', 'pd']
-REF_TRAJ = 'AFF'; %  ['AFF', 'Step2D', 'Rich', 'Sinusoid', 'VeryRich']
+REF_TRAJ = 'VeryRich'; %  ['AFF', 'Step2D', 'Rich', 'Sinusoid', 'VeryRich']
 SPACE = '3D'; % ['3D'] only 3D currently supported!
 real_system_urdf = './SPART/urdf/astrobee_planar_2_link_grapple.urdf';  % grappled a point mass
 model_system_urdf = './SPART/urdf/astrobee_planar_2_link.urdf';  % no knowledge of grappled point mass
@@ -24,7 +25,7 @@ model_system_urdf = './SPART/urdf/astrobee_planar_2_link.urdf';  % no knowledge 
 %--- Set up simulated real system ---%
 filename = real_system_urdf;
 [robot] = urdf_to_spart_model(filename);
-truemass = 0;
+truemass = 8;
 robot.links(end).mass = truemass;
 ff = spart_free_flyer_dynamics(robot);  % this can solve the forward dynamics
 
