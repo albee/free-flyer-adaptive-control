@@ -6,8 +6,11 @@ Accompanying [SciTech 2021 paper](https://arc.aiaa.org/doi/abs/10.2514/6.2021-20
 
 <p align="center">
 <img align="center" src="./img/adaptive2.gif">
+  
   An example of the "Assistive Free-Flyer Trajectory" being followed by an adaptive controller.
+  
 <img align="center" src="./img/mass.png">
+
   A sample of end effector mass adaptation of the adaptive controller.
 </p>
 
