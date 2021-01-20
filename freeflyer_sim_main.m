@@ -5,6 +5,7 @@
 %}
 
 addpath('./SPART');
+addpath('./linearizedFunctions/');
 addpath('./plot');
 addpath(genpath('./codegen'));
 clc; close all; clearvars;
