@@ -2,12 +2,12 @@
 Create a reference trajectory for n-link manipulator to follow
 
 Output:
-ref_traj : [t_des_hist, x_des_hist xdd_des_hist]
+ref_traj : [t_des_hist, x_des_hist, xdd_des_hist]
 
 Note: x_des_hist contains the state (positions and velocities).
 %}
 function ref_traj = create_ref_traj(varargin)
-% First input is the type of trajectory ['Circular', 'Step']
+% First input is the type of trajectory ['AFF', 'Circular', 'Step2D', 'Rich', 'Sinusoid', 'VeryRich']
 % [r1 r2 q0 q1 q2 r1d r2d q0d q1d q2d]'
 % x = [r1 r2 r3, q0x q0y q0z, q1,q2, rd1 rd2 rd3, q0d1 q0d2 q0d3, q1d, q2d]
 num_setpoints = 1001;
@@ -16,15 +16,14 @@ dt = tf/num_setpoints;
 t_des_hist = linspace(0,tf,num_setpoints)';
 
 if nargin == 0
-    REFTYPE = 'Shelf'; % ['Circular', 'Step']
+    REFTYPE = 'AFF'; % ['AFF', 'Circular', 'Step2D', 'Rich', 'Sinusoid', 'VeryRich']
 elseif nargin == 1
     REFTYPE = varargin{1};
 end
 
 switch REFTYPE
-    
-    case 'Shelf'
-        %% Shelf
+    case 'AFF'
+        %% AFF
         % [r1 r2 r3, q0x q0y q0z, q1,q2, rd1 rd2 rd3, q0d1 q0d2 q0d3, q1d, q2d]
         % [x                             xd
         xyz = [0, 0, 0;  % x y z
@@ -212,7 +211,7 @@ switch REFTYPE
         
         x_des_hist = [x_des_hist, xd_des_hist];
         
-    case 'veryRich'
+    case 'VeryRich'
         %% Rich, very rich
         %     x_des_hist =  zeros(num_setpoints, 10);
         %     x_des_hist(:,1:5) = repmat([0, 0, 0, 1.5, -1.5], num_setpoints, 1);
@@ -240,60 +239,59 @@ switch REFTYPE
 %         xdd_des_hist = zeros(size(xd_des_hist));
         
 end
+
 ref_traj = [t_des_hist, x_des_hist xdd_des_hist];
 end
 
 
 %% Helping Functions
 function [eul] = eul_from_omegahist(q0, wBvec, t)
-%[qvec] = q_from_omegahist(q0, omega, t)
-%Generates the time history of the quaternion vector
-%   Quaternion is a Hamiltonian quaternion that describes the motion from
-%   Body to Inertial. Scalar is first. Angular velocity vector is described
-%   in the body frame axes.
-%
-% Inputs
-% - q0      [4x1] Initial quaternion from body to inertial. Scalar First
-% - wvec    [nx3] Angular velocity vector history expressed in body-fixed
-%           axis
-% - t       [nx1] Time history 
+  %[qvec] = q_from_omegahist(q0, omega, t)
+  %Generates the time history of the quaternion vector
+  %   Quaternion is a Hamiltonian quaternion that describes the motion from
+  %   Body to Inertial. Scalar is first. Angular velocity vector is described
+  %   in the body frame axes.
+  %
+  % Inputs
+  % - q0      [4x1] Initial quaternion from body to inertial. Scalar First
+  % - wvec    [nx3] Angular velocity vector history expressed in body-fixed
+  %           axis
+  % - t       [nx1] Time history 
 
-qvec = nan(size(wBvec,1),4);
+  qvec = nan(size(wBvec,1),4);
 
-qvec(1, :)  = q0(:)';
+  qvec(1, :)  = q0(:)';
 
-eul = nan(size(wBvec,1),3);
-
-
-eul0 = quat2eul(q0(:)', 'XYZ');
-eul(1, :)  = eul0;
-
-% 
-% qvec2 = nan(size(wBvec,1),4);
-% 
-% qvec2(1, :)  = q0(:)';
-
-for ii = 2:size(wBvec,1)
-    % Using Exponential Matrix
-    q_minus = qvec(ii-1,:)'; % [4x1] previous quaternion
-    
-    wB_minus = wBvec(ii, :)';
-    
-    S_w = [0 -wB_minus(1) -wB_minus(2) -wB_minus(3);
-    wB_minus(1) 0 wB_minus(3) -wB_minus(2);
-    wB_minus(2) -wB_minus(3) 0 wB_minus(1);
-    wB_minus(3) wB_minus(2) -wB_minus(1) 0];
-
-    
-    delta_t = t(ii) - t(ii-1);
-    expquat = expm(S_w*delta_t);
-    
-    q_plus = expquat*q_minus;
-    
-    qvec(ii, :) = q_plus(:)';    
-    eul(ii,:) = quat2eul(q_plus(:)', 'XYZ');
-
-end
+  eul = nan(size(wBvec,1),3);
 
 
+  eul0 = quat2eul(q0(:)', 'XYZ');
+  eul(1, :)  = eul0;
+
+  % 
+  % qvec2 = nan(size(wBvec,1),4);
+  % 
+  % qvec2(1, :)  = q0(:)';
+
+  for ii = 2:size(wBvec,1)
+      % Using Exponential Matrix
+      q_minus = qvec(ii-1,:)'; % [4x1] previous quaternion
+
+      wB_minus = wBvec(ii, :)';
+
+      S_w = [0 -wB_minus(1) -wB_minus(2) -wB_minus(3);
+      wB_minus(1) 0 wB_minus(3) -wB_minus(2);
+      wB_minus(2) -wB_minus(3) 0 wB_minus(1);
+      wB_minus(3) wB_minus(2) -wB_minus(1) 0];
+
+
+      delta_t = t(ii) - t(ii-1);
+      expquat = expm(S_w*delta_t);
+
+      q_plus = expquat*q_minus;
+
+      qvec(ii, :) = q_plus(:)';    
+      eul(ii,:) = quat2eul(q_plus(:)', 'XYZ');
+
+  end
 end

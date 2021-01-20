@@ -1,6 +1,7 @@
 %{
- Keenan Albee, Jun 2020
  Two-link free-flying manipulator adaptive and non-adaptive control.
+
+ Keenan Albee and Alex Cabrales, Jan-2021
 %}
 
 addpath('./SPART');
@@ -10,14 +11,15 @@ clc; close all; clearvars;
 
 fontsize = 25;
 
-COMPUTE_ANALYTICAL = false;  % loads analytical instead of computing it
-tf = 2.0; % specified in create_ref_traj()
-CONTROLLER = 'feedback_lin'; % ['adaptive', 'feedback_lin', 'pd']
-REF_TRAJ = 'Shelf'; % ['Circular, 'Step', 'Sinusoid', 'Shelf'] 
-SPACE = '3D'; % ['2D', '3D']
+%% Setup
+%--- Parameters ---%
+COMPUTE_ANALYTICAL = false;  % loads analytical adaptive control instead of computing it
+tf = 20.0; % specified in create_ref_traj()
+CONTROLLER = 'adaptive'; %  ['adaptive', 'feedback_lin', 'pd']
+REF_TRAJ = 'AFF'; %  ['AFF', 'Step2D', 'Rich', 'Sinusoid', 'VeryRich']
+SPACE = '3D'; % ['3D'] only 3D currently supported!
 real_system_urdf = './SPART/urdf/astrobee_planar_2_link_grapple.urdf';  % grappled a point mass
-model_system_urdf = './SPART/urdf/astrobee_planar_2_link.urdf';
-
+model_system_urdf = './SPART/urdf/astrobee_planar_2_link.urdf';  % no knowledge of grappled point mass
 
 %--- Set up simulated real system ---%
 filename = real_system_urdf;
@@ -37,7 +39,7 @@ n = 2*(6 + num_joints);
 m = 3 + num_joints;
 
 % ---- Create Trajectory ----- %
-ref_traj = create_ref_traj(REF_TRAJ);
+ref_traj = create_ref_traj(REF_TRAJ);  % this actually creates the reference trajectory. See create_ref_traj.m.
 t_setpoints = ref_traj(:, 1);
 x_des_setpoints = ref_traj(:, 2:n+1);
 xdd_des_setpoints = ref_traj(:, n+2:end);
@@ -47,14 +49,11 @@ control_hist = [];  % actual control issued by controller
 
 if COMPUTE_ANALYTICAL
     [Y_lin, Y_aff] = analytical_dynamics(filename, SPACE);
-else
-%    load('3DYlin.mat')
-%    load('3DYaff.mat')
 end
 
-%% Setup
+%% Controller selection
 if strcmp(CONTROLLER, 'adaptive')
-    %% Adaptive control
+    % Adaptive control
     %Initial conditions
     % state : [r1 r2 q0 q1 r1d r2d q0d q1d, a_hatd]' INERTIAL
     a_hat_0 = 0.0;
@@ -65,7 +64,7 @@ if strcmp(CONTROLLER, 'adaptive')
     dynamics = @(t, x) freeflyer_dyn_adapt(t, x, ff, ff_model, ref_traj, 0, 0, CONTROLLER, SPACE);
     odeOptions = odeset('RelTol',1e-4,'AbsTol',1e-4);
 elseif strcmp(CONTROLLER, 'feedback_lin')
-    %% Nominal system control
+    % Feedback linearization
     %Initial conditions
     % state : [r1 r2 q0 q1 r1d r2d q0d q1d]' INERTIAL
     %         [r1 r2 q0 q1 q2 r1d r2d q0d q1d q2d]' INERTIAL
@@ -75,7 +74,7 @@ elseif strcmp(CONTROLLER, 'feedback_lin')
     dynamics = @(t, x) freeflyer_dyn_adapt(t, x, ff, ff_model, ref_traj, 0, 0, CONTROLLER, SPACE);
     odeOptions = odeset('RelTol',1e-4,'AbsTol',1e-4);
 elseif strcmp(CONTROLLER, 'pd')
-    %% Nominal system control
+    % PD control
     %Initial conditions
     % state : [r1 r2 q0 q1 r1d r2d q0d q1d]' INERTIAL
     %         [r1 r2 q0 q1 q2 r1d r2d q0d q1d q2d]' INERTIAL
@@ -87,7 +86,9 @@ elseif strcmp(CONTROLLER, 'pd')
 end
 
 %% Dynamics
+disp("Running dynamics simulation...")
 [tvec, state_hist] = ode23(dynamics, tspan, x_0, odeOptions);  % produces [t, n] of state history
+disp("Simulation complete! x_des_hist contains reference trajectory. See 'Plotting, animation, analysis' for more outputs.")
 
 %% Plotting, animation, analysis
 % Recreate control and setpoint history
@@ -133,7 +134,7 @@ tau1_hist = control_hist(:,7);
 tau2_hist = control_hist(:,8);
 
 %--- Metrics ---%
-[RMS, vec_RMS] = calc_RMS_error(x_des_hist, state_hist(:,1:16), false)  % no parameters
+[RMS, vec_RMS] = calc_RMS_error(x_des_hist, state_hist(:,1:16), false);  % no parameters
 
 %--- Set up animation ---%
 % Choose an animation rate
@@ -216,12 +217,13 @@ title('2-Link Manipulator Input History','Interpreter', 'latex', 'FontSize', fon
 
 if strcmp(CONTROLLER, 'adaptive')
     % Adaptation History
+    truemass = 8.0;  % [kg]
     figure  
     a1_hist = state_hist(:,end);     
     plot(tvec(1:end-10), truemass*ones(size(tvec,1)-10),'--black', 'linewidth', 2)
-     hold on
+    hold on
     plot(tvec(1:end-10), a1_hist(1:end-10),'-black', 'linewidth', 2)
-    plot(test.tvec(1:end-10), test.a1_hist(1:end-10),'LineWidth',2)
+    plot(tvec(1:end-10), a1_hist(1:end-10),'LineWidth',2)
     
 %     ylim([-5,10]); 
 %     legend('$m_3$', '$\hat{m}_3$', 'Interpreter', 'latex', 'FontSize', fontsize);

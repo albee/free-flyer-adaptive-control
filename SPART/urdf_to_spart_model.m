@@ -2,6 +2,8 @@
 Create a spart robot object from a URDF file.
 Inputs: URDF filename
 Outputs: robot model
+
+Keenan Albee, 2021
 %}
 function [robot, H, C] = urdf_to_spart_model(filename)
     if nargin == 0
